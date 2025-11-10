@@ -24,7 +24,7 @@ const HeroSection = () => {
                         </h1>
 
                         {/* Description */}
-                        <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl leading-relaxed">
+                        <p className="text-md md:text-xl text-gray-600 mb-8 max-w-2xl leading-relaxed">
                             Join our vibrant community of designers, developers, and creators.
                             Learn from industry experts, collaborate on real-world projects, and
                             transform your passion into a profession.

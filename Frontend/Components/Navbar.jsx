@@ -11,6 +11,7 @@ import {
   FaBars,
   FaTimes
 } from 'react-icons/fa';
+import { Link } from 'react-router-dom'; // 👈 Import React Router
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -45,7 +46,8 @@ const Navbar = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
-          {/* Logo with Enhanced Animation */}
+          
+          {/* Logo */}
           <div className="flex-shrink-0">
             <a 
               href="#home" 
@@ -56,7 +58,6 @@ const Navbar = () => {
                 <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 shadow-lg">
                   <FaPalette className="text-white text-xl" />
                 </div>
-                {/* Pulsing Effect */}
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 blur-md transition-all duration-500 -z-10"></div>
               </div>
               <div className="flex flex-col">
@@ -68,9 +69,9 @@ const Navbar = () => {
             </a>
           </div>
 
-          {/* Desktop Navigation Links - Centered with Icons */}
+          {/* Desktop Links */}
           <div className="hidden md:flex items-center space-x-1 bg-white/80 backdrop-blur-sm rounded-full px-2 py-1 shadow-md border border-gray-100">
-            {navLinks.map((link, index) => {
+            {navLinks.map((link) => {
               const IconComponent = link.icon;
               return (
                 <a
@@ -87,8 +88,6 @@ const Navbar = () => {
                     activeLink === link.name ? 'scale-110' : 'group-hover:scale-110'
                   }`} />
                   {link.name}
-                  
-                  {/* Hover Effect */}
                   {activeLink !== link.name && (
                     <span className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
                   )}
@@ -97,28 +96,32 @@ const Navbar = () => {
             })}
           </div>
 
-          {/* Desktop Login/Register Buttons with Enhanced Animations */}
+          {/* Desktop Login / Register */}
           <div className="hidden md:flex items-center space-x-3">
-            <button className="group flex items-center px-4 py-2 text-gray-700 font-medium rounded-full hover:text-blue-600 transition-all duration-300 relative overflow-hidden">
+            <Link 
+              to="/login"
+              className="group flex items-center px-4 py-2 text-gray-700 font-medium rounded-full hover:text-blue-600 transition-all duration-300 relative overflow-hidden"
+            >
               <span className="relative z-10 flex items-center">
                 <FaSignInAlt className="mr-2 group-hover:scale-110 transition-transform duration-300" />
                 Login
               </span>
-              {/* Animated Background on Hover */}
               <span className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transform scale-0 group-hover:scale-100 transition-transform duration-300 opacity-10"></span>
-            </button>
-            
-            <button className="group flex items-center px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-full hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg relative overflow-hidden">
+            </Link>
+
+            <Link 
+              to="/register"
+              className="group flex items-center px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-full hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg relative overflow-hidden"
+            >
               <span className="relative z-10 flex items-center">
                 <FaUserPlus className="mr-2 group-hover:scale-110 transition-transform duration-300" />
                 Register
               </span>
-              {/* Shine Effect */}
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></span>
-            </button>
+            </Link>
           </div>
 
-          {/* Enhanced Mobile menu button */}
+          {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -129,14 +132,11 @@ const Navbar = () => {
               ) : (
                 <FaBars className="text-lg transform rotate-0 transition-transform duration-300" />
               )}
-              
-              {/* Pulsing Effect */}
-              <span className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-ping opacity-0 group-hover:opacity-100"></span>
             </button>
           </div>
         </div>
 
-        {/* Enhanced Mobile Navigation Menu */}
+        {/* Mobile Menu */}
         <div className={`md:hidden transition-all duration-500 overflow-hidden ${
           isOpen ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'
         }`}>
@@ -162,8 +162,6 @@ const Navbar = () => {
                       activeLink === link.name ? 'scale-110' : 'group-hover:scale-110'
                     }`} />
                     {link.name}
-                    
-                    {/* Arrow indicator */}
                     <span className={`ml-auto transform transition-transform duration-300 ${
                       activeLink === link.name ? 'translate-x-0' : '-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100'
                     }`}>
@@ -172,43 +170,41 @@ const Navbar = () => {
                   </a>
                 );
               })}
-              
-              {/* Mobile Auth Buttons */}
+
+              {/* Mobile Login/Register */}
               <div className="pt-4 border-t border-gray-200/50 space-y-2">
-                <button className="w-full flex items-center justify-center px-4 py-3 text-gray-700 font-medium rounded-xl hover:bg-white/50 transition-all duration-300 group">
+                <Link 
+                  to="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full flex items-center justify-center px-4 py-3 text-gray-700 font-medium rounded-xl hover:bg-white/50 transition-all duration-300 group"
+                >
                   <FaSignInAlt className="mr-3 group-hover:scale-110 transition-transform duration-300" />
                   Login
-                </button>
-                <button className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 group">
+                </Link>
+                <Link 
+                  to="/register"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 group"
+                >
                   <FaUserPlus className="mr-3 group-hover:scale-110 transition-transform duration-300" />
                   Register
-                </button>
+                </Link>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Custom Animations for Tailwind */}
       <style jsx>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-3px); }
         }
-        
         .animate-float {
           animation: float 3s ease-in-out infinite;
         }
-        
-        /* Smooth backdrop blur for better performance */
-        @supports (backdrop-filter: blur(10px)) {
-          .backdrop-blur-md {
-            backdrop-filter: blur(12px);
-          }
-        }
       `}</style>
     </nav>
-    
   );
 };
 

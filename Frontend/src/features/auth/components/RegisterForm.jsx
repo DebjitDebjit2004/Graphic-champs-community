@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   FaUser, 
@@ -14,8 +14,10 @@ import {
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const RegisterForm = ({ isMobile = false }) => {
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -130,27 +132,29 @@ const RegisterForm = ({ isMobile = false }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateStepThree()) {
-      return;
-    }
+    if (!validateStepThree()) return;
     
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      const response = await new Promise((resolve) => 
-        setTimeout(() => resolve({ success: true }), 1500)
-      );
+      const userData = {
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        gender: formData.gender,
+        dob: formData.dob,
+        password: formData.password
+      };
       
-      if (response.success) {
-        toast.success('Registration successful! Redirecting to verification...');
-        // Redirect to OTP verification
-        setTimeout(() => {
-          navigate('/otp-verification', { state: { email: formData.email } });
-        }, 1500);
+      const result = await register(userData);
+      
+      if (result.success) {
+        toast.success('Registration successful! Please verify your email.');
+        navigate('/otp-verification', { state: { email: formData.email } });
       } else {
-        throw new Error('Registration failed. Please try again.');
+        throw new Error(result.message || 'Registration failed');
       }
+      
     } catch (error) {
       toast.error(error.message || 'Registration failed. Please try again.');
     } finally {

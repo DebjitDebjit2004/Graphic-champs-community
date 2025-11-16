@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  FaHome, 
-  FaBook, 
-  FaUsers, 
-  FaUserTie, 
-  FaQuestionCircle, 
-  FaSignInAlt, 
+import {
+  FaHome,
+  FaBook,
+  FaUsers,
+  FaUserTie,
+  FaQuestionCircle,
+  FaSignInAlt,
   FaUserPlus,
   FaPalette,
   FaBars,
   FaTimes
 } from 'react-icons/fa';
-import { Link } from 'react-router-dom'; // 👈 Import React Router
+import { Link, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,29 +28,33 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const location = useLocation();
   const navLinks = [
-    { name: 'Home', href: '#home', icon: FaHome },
-    { name: 'Course', href: '#course', icon: FaBook },
-    { name: 'Team', href: '#team', icon: FaUsers },
-    { name: 'Mentor', href: '#mentor', icon: FaUserTie },
-    { name: 'FAQ', href: '#faq', icon: FaQuestionCircle },
+    { name: 'Home', path: '/', icon: FaHome },
+    { name: 'Course', path: '/courses', icon: FaBook },
+    { name: 'Team', path: '/team', icon: FaUsers },
+    { name: 'Mentor', path: '/mentors', icon: FaUserTie },
+    { name: 'FAQ', path: '/faq', icon: FaQuestionCircle },
   ];
 
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
+
   return (
-    <nav 
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
-        scrolled 
-          ? 'bg-white/95 backdrop-blur-md shadow-lg py-2' 
+    <nav
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${scrolled
+          ? 'bg-white/95 backdrop-blur-md shadow-lg py-2'
           : 'bg-white/90 backdrop-blur-sm py-4'
-      }`}
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
-          
+
           {/* Logo */}
           <div className="flex-shrink-0">
-            <a 
-              href="#home" 
+            <Link
+              to="/"
               className="flex items-center space-x-3 group"
               onClick={() => setActiveLink('Home')}
             >
@@ -61,12 +65,12 @@ const Navbar = () => {
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 blur-md transition-all duration-500 -z-10"></div>
               </div>
               <div className="flex flex-col">
-                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  GraphixChamps
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+                  Graphic Champs
                 </span>
-                <span className="text-xs text-gray-500 -mt-1">Creative Community</span>
               </div>
-            </a>
+            </Link>
+            <span className="text-xs text-gray-500 -mt-1">Creative Community</span>
           </div>
 
           {/* Desktop Links */}
@@ -74,31 +78,29 @@ const Navbar = () => {
             {navLinks.map((link) => {
               const IconComponent = link.icon;
               return (
-                <a
+                <Link
                   key={link.name}
-                  href={link.href}
-                  className={`relative flex items-center px-4 py-2 rounded-full font-medium transition-all duration-300 group ${
-                    activeLink === link.name 
-                      ? 'text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg' 
+                  to={link.path}
+                  className={`relative flex items-center px-4 py-2 rounded-full font-medium transition-all duration-300 group ${isActive(link.path)
+                      ? 'text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg'
                       : 'text-gray-700 hover:text-blue-600'
-                  }`}
+                    }`}
                   onClick={() => setActiveLink(link.name)}
                 >
-                  <IconComponent className={`mr-2 transition-all duration-300 ${
-                    activeLink === link.name ? 'scale-110' : 'group-hover:scale-110'
-                  }`} />
+                  <IconComponent className={`mr-2 transition-all duration-300 ${activeLink === link.name ? 'scale-110' : 'group-hover:scale-110'
+                    }`} />
                   {link.name}
-                  {activeLink !== link.name && (
+                  {!isActive(link.path) && (
                     <span className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
                   )}
-                </a>
+                </Link>
               );
             })}
           </div>
 
           {/* Desktop Login / Register */}
           <div className="hidden md:flex items-center space-x-3">
-            <Link 
+            <Link
               to="/login"
               className="group flex items-center px-4 py-2 text-gray-700 font-medium rounded-full hover:text-blue-600 transition-all duration-300 relative overflow-hidden"
             >
@@ -109,7 +111,7 @@ const Navbar = () => {
               <span className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transform scale-0 group-hover:scale-100 transition-transform duration-300 opacity-10"></span>
             </Link>
 
-            <Link 
+            <Link
               to="/register"
               className="group flex items-center px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-full hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg relative overflow-hidden"
             >
@@ -137,43 +139,39 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Menu */}
-        <div className={`md:hidden transition-all duration-500 overflow-hidden ${
-          isOpen ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'
-        }`}>
+        <div className={`md:hidden transition-all duration-500 overflow-hidden ${isOpen ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'
+          }`}>
           <div className="bg-gradient-to-br from-white to-blue-50/80 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/20">
             <div className="space-y-2">
               {navLinks.map((link) => {
                 const IconComponent = link.icon;
                 return (
-                  <a
+                  <Link
                     key={link.name}
-                    href={link.href}
-                    className={`flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-300 group ${
-                      activeLink === link.name 
-                        ? 'text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg transform scale-105' 
+                    to={link.path}
+                    className={`flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-300 group ${isActive(link.path)
+                        ? 'text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg transform scale-105'
                         : 'text-gray-700 hover:text-blue-600 hover:bg-white/50'
-                    }`}
+                      }`}
                     onClick={() => {
                       setActiveLink(link.name);
                       setIsOpen(false);
                     }}
                   >
-                    <IconComponent className={`mr-3 text-lg transition-transform duration-300 ${
-                      activeLink === link.name ? 'scale-110' : 'group-hover:scale-110'
-                    }`} />
+                    <IconComponent className={`mr-3 text-lg transition-transform duration-300 ${isActive(link.path) ? 'scale-110' : 'group-hover:scale-110'
+                      }`} />
                     {link.name}
-                    <span className={`ml-auto transform transition-transform duration-300 ${
-                      activeLink === link.name ? 'translate-x-0' : '-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100'
-                    }`}>
+                    <span className={`ml-auto transform transition-transform duration-300 ${isActive(link.path) ? 'translate-x-0' : '-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100'
+                      }`}>
                       →
                     </span>
-                  </a>
+                  </Link>
                 );
               })}
 
               {/* Mobile Login/Register */}
               <div className="pt-4 border-t border-gray-200/50 space-y-2">
-                <Link 
+                <Link
                   to="/login"
                   onClick={() => setIsOpen(false)}
                   className="w-full flex items-center justify-center px-4 py-3 text-gray-700 font-medium rounded-xl hover:bg-white/50 transition-all duration-300 group"
@@ -181,7 +179,7 @@ const Navbar = () => {
                   <FaSignInAlt className="mr-3 group-hover:scale-110 transition-transform duration-300" />
                   Login
                 </Link>
-                <Link 
+                <Link
                   to="/register"
                   onClick={() => setIsOpen(false)}
                   className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 group"
@@ -195,15 +193,16 @@ const Navbar = () => {
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-3px); }
-        }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-      `}</style>
+      <style>{`
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-3px); }
+  }
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+`}</style>
+
     </nav>
   );
 };

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle, FaGithub } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const LoginForm = ({ isMobile = false }) => {
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -51,30 +53,20 @@ const LoginForm = ({ isMobile = false }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
     
     setIsLoading(true);
     
     try {
-      // Simulate API call with error handling
-      const response = await new Promise((resolve) => 
-        setTimeout(() => resolve({ success: true }), 1500)
-      );
-      
-      if (response.success) {
-        toast.success('Login successful! Redirecting...');
-        // Redirect to dashboard or home page after successful login
-        setTimeout(() => {
-          navigate('/');
-        }, 1500);
+      const result = await login(formData);
+      if (result.success) {
+        toast.success('Login successful!');
+        navigate('/'); // Redirect to home or dashboard
       } else {
-        throw new Error('Invalid credentials');
+        throw new Error(result.message || 'Login failed');
       }
     } catch (error) {
-      toast.error(error.message || 'Login failed. Please try again.');
+      toast.error(error.message || 'Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }

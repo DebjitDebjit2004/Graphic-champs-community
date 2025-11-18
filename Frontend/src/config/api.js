@@ -6,8 +6,10 @@ export const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
-  withCredentials: true
+  withCredentials: true,
+  crossDomain: true
 });
 
 // Add request interceptor to include auth token
@@ -16,6 +18,7 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      config.headers['Access-Control-Allow-Credentials'] = true;
     }
     return config;
   },

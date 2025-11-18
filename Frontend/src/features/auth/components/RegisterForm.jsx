@@ -27,6 +27,7 @@ const RegisterForm = ({ isMobile = false }) => {
     password: '',
     confirmPassword: ''
   });
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -95,6 +96,10 @@ const RegisterForm = ({ isMobile = false }) => {
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
+
+    if (!acceptedTerms) {
+      newErrors.terms = 'You must accept the terms and conditions';
+    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -132,7 +137,17 @@ const RegisterForm = ({ isMobile = false }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateStepThree()) return;
+    if (!validateStepThree()) {
+      // Scroll to the first error if there are any
+      const firstError = Object.keys(errors)[0];
+      if (firstError) {
+        const element = document.querySelector(`[name="${firstError}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      return;
+    }
     
     setIsLoading(true);
     
@@ -148,14 +163,20 @@ const RegisterForm = ({ isMobile = false }) => {
       
       const result = await register(userData);
       
-      if (result.success) {
+      if (result.success || result.token) {  // Check for both success flag and token
         toast.success('Registration successful! Please verify your email.');
-        navigate('/otp-verification', { state: { email: formData.email } });
+        navigate('/otp-verification', { 
+          state: { 
+            email: formData.email,
+            from: 'register'  // Indicate this is a new registration
+          } 
+        });
       } else {
         throw new Error(result.message || 'Registration failed');
       }
       
     } catch (error) {
+      console.error('Registration error:', error);
       toast.error(error.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -432,6 +453,8 @@ const RegisterForm = ({ isMobile = false }) => {
               id="terms"
               name="terms"
               type="checkbox"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               required
             />
@@ -441,6 +464,9 @@ const RegisterForm = ({ isMobile = false }) => {
               I agree to the <a href="#" className="text-blue-600 hover:text-blue-800">Terms of Service</a> and{' '}
               <a href="#" className="text-blue-600 hover:text-blue-800">Privacy Policy</a>
             </label>
+            {errors.terms && (
+              <p className="mt-1 text-sm text-red-500">{errors.terms}</p>
+            )}
           </div>
         </div>
       </div>

@@ -4,8 +4,71 @@ import sendEmail from '../utils/emailService.js';
 import generateOTP from '../utils/otpGenerator.js';
 import ErrorHandler from '../utils/errorHandler.js';
 import catchAsyncErrors from '../middleware/catchAsyncErrors.js';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();
+
+// @desc    Register a new user
+// @route   POST /api/auth/register
+// @access  Public
+router.post('/register', catchAsyncErrors(async (req, res, next) => {
+    const { name, email, password, phone, gender, dob } = req.body;
+
+    // Validate input
+    if (!name || !email || !password || !phone) {
+        return next(new ErrorHandler('Please provide all required fields', 400));
+    }
+
+    // Check if user already exists
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+        return next(new ErrorHandler('User already exists', 400));
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Generate OTP
+    const otp = generateOTP();
+    const otpExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    // Create user
+    const user = await User.create({
+        name,
+        email,
+        password: hashedPassword,
+        phone,
+        gender,
+        dob,
+        otp,
+        otpExpire,
+        isVerified: false
+    });
+
+    // Send verification email
+    const message = `Your OTP for registration is: ${otp}. It will expire in 10 minutes.`;
+    await sendEmail({
+        email: user.email,
+        subject: 'Email Verification OTP',
+        message
+    });
+
+    // Create token
+    const token = user.getJWTToken();
+
+    res.status(201).json({
+        success: true,
+        message: 'Registration successful. Please verify your email.',
+        token,
+        user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            isVerified: user.isVerified
+        }
+    });
+}));
 
 // @desc    Send OTP to user's email
 // @route   POST /api/auth/send-otp

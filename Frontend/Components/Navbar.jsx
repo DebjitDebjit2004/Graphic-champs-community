@@ -9,14 +9,26 @@ import {
   FaUserPlus,
   FaPalette,
   FaBars,
-  FaTimes
+  FaTimes,
+  FaUserCircle,
+  FaSignOutAlt
 } from 'react-icons/fa';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../src/contexts/AuthContext';
+import { toast } from 'react-toastify';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeLink, setActiveLink] = useState('Home');
+  const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Logged out successfully');
+    navigate('/');
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -98,29 +110,52 @@ const Navbar = () => {
             })}
           </div>
 
-          {/* Desktop Login / Register */}
+          {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-3">
-            <Link
-              to="/login"
-              className="group flex items-center px-4 py-2 text-gray-700 font-medium rounded-full hover:text-blue-600 transition-all duration-300 relative overflow-hidden"
-            >
-              <span className="relative z-10 flex items-center">
-                <FaSignInAlt className="mr-2 group-hover:scale-110 transition-transform duration-300" />
-                Login
-              </span>
-              <span className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transform scale-0 group-hover:scale-100 transition-transform duration-300 opacity-10"></span>
-            </Link>
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-md border border-gray-100">
+                  <FaUserCircle className="text-blue-500 text-xl" />
+                  <span className="font-medium text-gray-700">
+                    {user?.name?.split(' ')[0] || 'User'}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="group flex items-center px-4 py-2 text-gray-700 font-medium rounded-full hover:text-red-600 transition-all duration-300 relative overflow-hidden"
+                >
+                  <span className="relative z-10 flex items-center">
+                    <FaSignOutAlt className="mr-2 group-hover:scale-110 transition-transform duration-300" />
+                    Logout
+                  </span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 rounded-full transform scale-0 group-hover:scale-100 transition-transform duration-300 opacity-10"></span>
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="group flex items-center px-4 py-2 text-gray-700 font-medium rounded-full hover:text-blue-600 transition-all duration-300 relative overflow-hidden"
+                >
+                  <span className="relative z-10 flex items-center">
+                    <FaSignInAlt className="mr-2 group-hover:scale-110 transition-transform duration-300" />
+                    Login
+                  </span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transform scale-0 group-hover:scale-100 transition-transform duration-300 opacity-10"></span>
+                </Link>
 
-            <Link
-              to="/register"
-              className="group flex items-center px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-full hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg relative overflow-hidden"
-            >
-              <span className="relative z-10 flex items-center">
-                <FaUserPlus className="mr-2 group-hover:scale-110 transition-transform duration-300" />
-                Register
-              </span>
-              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></span>
-            </Link>
+                <Link
+                  to="/register"
+                  className="group flex items-center px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-full hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg relative overflow-hidden"
+                >
+                  <span className="relative z-10 flex items-center">
+                    <FaUserPlus className="mr-2 group-hover:scale-110 transition-transform duration-300" />
+                    Register
+                  </span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></span>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -169,24 +204,47 @@ const Navbar = () => {
                 );
               })}
 
-              {/* Mobile Login/Register */}
+              {/* Mobile Auth Buttons */}
               <div className="pt-4 border-t border-gray-200/50 space-y-2">
-                <Link
-                  to="/login"
-                  onClick={() => setIsOpen(false)}
-                  className="w-full flex items-center justify-center px-4 py-3 text-gray-700 font-medium rounded-xl hover:bg-white/50 transition-all duration-300 group"
-                >
-                  <FaSignInAlt className="mr-3 group-hover:scale-110 transition-transform duration-300" />
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setIsOpen(false)}
-                  className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 group"
-                >
-                  <FaUserPlus className="mr-3 group-hover:scale-110 transition-transform duration-300" />
-                  Register
-                </Link>
+                {isAuthenticated ? (
+                  <>
+                    <div className="flex items-center px-4 py-3 bg-white/50 rounded-xl mb-2">
+                      <FaUserCircle className="text-blue-500 text-xl mr-3" />
+                      <span className="font-medium text-gray-700">
+                        {user?.name || 'User'}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsOpen(false);
+                      }}
+                      className="w-full flex items-center justify-center px-4 py-3 bg-red-500 text-white font-medium rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 group"
+                    >
+                      <FaSignOutAlt className="mr-3 group-hover:scale-110 transition-transform duration-300" />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      onClick={() => setIsOpen(false)}
+                      className="w-full flex items-center justify-center px-4 py-3 text-gray-700 font-medium rounded-xl hover:bg-white/50 transition-all duration-300 group"
+                    >
+                      <FaSignInAlt className="mr-3 group-hover:scale-110 transition-transform duration-300" />
+                      Login
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={() => setIsOpen(false)}
+                      className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 group"
+                    >
+                      <FaUserPlus className="mr-3 group-hover:scale-110 transition-transform duration-300" />
+                      Register
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

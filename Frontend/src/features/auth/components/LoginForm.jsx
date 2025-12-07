@@ -1,12 +1,13 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useGoogleLogin } from '@react-oauth/google';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle, FaGithub } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '../../../contexts/AuthContext';
 
 const LoginForm = ({ isMobile = false }) => {
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -14,6 +15,7 @@ const LoginForm = ({ isMobile = false }) => {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const navigate = useNavigate();
 
   const validateForm = () => {
@@ -71,11 +73,30 @@ const LoginForm = ({ isMobile = false }) => {
       setIsLoading(false);
     }
   };
-  
-  const handleSocialLogin = (provider) => {
-    toast.info(`Sign in with ${provider} coming soon!`);
-    // Implement social login logic here
-  };
+
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (codeResponse) => {
+      setIsGoogleLoading(true);
+      try {
+        const result = await googleLogin(codeResponse.access_token);
+        if (result.success) {
+          toast.success(result.message || 'Login successful!');
+          navigate('/');
+        } else {
+          throw new Error(result.message || 'Google login failed');
+        }
+      } catch (error) {
+        toast.error(error.message || 'Google login failed. Please try again.');
+      } finally {
+        setIsGoogleLoading(false);
+      }
+    },
+    onError: () => {
+      toast.error('Google login failed. Please try again.');
+      setIsGoogleLoading(false);
+    },
+    flow: 'implicit'
+  });
   
   const handleForgotPassword = () => {
     navigate('/forgot-password');
@@ -195,16 +216,26 @@ const LoginForm = ({ isMobile = false }) => {
       <div className="grid grid-cols-2 gap-3 mb-6">
         <button 
           type="button"
-          onClick={() => handleSocialLogin('Google')}
-          className="flex items-center justify-center p-3 bg-gray-50 text-gray-600 rounded-xl border border-gray-200 hover:bg-gray-100 transform hover:scale-105 transition-all duration-300"
+          onClick={() => handleGoogleLogin()}
+          disabled={isGoogleLoading}
+          className={`flex items-center justify-center p-3 bg-red-50 text-red-600 rounded-xl border border-red-200 hover:bg-red-100 transform hover:scale-105 transition-all duration-300 ${
+            isGoogleLoading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         >
-          <FaGoogle className="mr-2" />
-          Google
+          {isGoogleLoading ? (
+            <div className="w-5 h-5 border-t-2 border-red-600 rounded-full animate-spin"></div>
+          ) : (
+            <>
+              <FaGoogle className="mr-2" />
+              Google
+            </>
+          )}
         </button>
         <button 
           type="button"
-          onClick={() => handleSocialLogin('GitHub')}
-          className="flex items-center justify-center p-3 bg-gray-50 text-gray-600 rounded-xl border border-gray-200 hover:bg-gray-100 transform hover:scale-105 transition-all duration-300"
+          disabled
+          className="flex items-center justify-center p-3 bg-gray-50 text-gray-600 rounded-xl border border-gray-200 opacity-50 cursor-not-allowed"
+          title="GitHub login coming soon"
         >
           <FaGithub className="mr-2" />
           GitHub

@@ -246,3 +246,71 @@ export const logoutUser = async (req, res, next) => {
         next(error);
     }
 };
+
+// @desc    Google OAuth Login/Register
+// @route   POST /api/auth/google
+// @access  Public
+export const googleAuth = async (req, res, next) => {
+    try {
+        const { token } = req.body;
+
+        if (!token) {
+            return next(new ErrorHandler('Please provide a Google token', 400));
+        }
+
+        // Verify Google token using jwt decode (you should verify with Google servers in production)
+        let decoded;
+        try {
+            decoded = JSON.parse(atob(token.split('.')[1]));
+        } catch (error) {
+            return next(new ErrorHandler('Invalid Google token', 400));
+        }
+
+        const { email, name, picture, sub: googleId } = decoded;
+
+        // Find or create user
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // Create new user with Google OAuth
+            user = await User.create({
+                name: name || email.split('@')[0],
+                email,
+                googleId,
+                authProvider: 'google',
+                isVerified: true, // Google verified emails are already verified
+                avatar: {
+                    url: picture || ''
+                }
+            });
+        } else if (user.authProvider === 'email' && !user.googleId) {
+            // Link Google account to existing email user
+            user.googleId = googleId;
+            user.authProvider = 'google';
+            user.isVerified = true;
+            if (!user.avatar?.url && picture) {
+                user.avatar = { url: picture };
+            }
+            await user.save();
+        }
+
+        // Generate JWT token
+        const jwtToken = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: '30d' }
+        );
+
+        // Remove password from output
+        user.password = undefined;
+
+        res.status(200).json({
+            success: true,
+            token: jwtToken,
+            user,
+            message: user.createdAt === user.updatedAt ? 'Account created and logged in' : 'Logged in successfully'
+        });
+    } catch (error) {
+        next(error);
+    }
+};

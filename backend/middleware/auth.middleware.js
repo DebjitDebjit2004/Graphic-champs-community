@@ -5,6 +5,30 @@ import User from '../models/User.model.js';
 
 // Check if user is authenticated
 export const isAuthenticated = asyncHandler(async (req, res, next) => {
+  // Bypass authentication in development
+  if (process.env.NODE_ENV === 'development') {
+    // Find or create a test user
+    let testUser = await User.findOne({ email: 'test@example.com' });
+    
+    if (!testUser) {
+      // Create a test user if doesn't exist
+      testUser = await User.create({
+        name: 'Test User',
+        email: 'test@example.com',
+        password: 'password123', // This will be hashed by the pre-save hook
+        phone: '1234567890',
+        isVerified: true,
+        role: 'admin'
+      });
+      // Remove password from the user object
+      testUser.password = undefined;
+    }
+    
+    req.user = testUser;
+    return next();
+  }
+  
+  // Production authentication flow
   let token;
   
   // Check for token in cookies

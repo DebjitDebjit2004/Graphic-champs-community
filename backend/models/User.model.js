@@ -18,9 +18,9 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Please enter your password'],
     minLength: [6, 'Password must be at least 6 characters'],
-    select: false
+    select: false,
+    default: null
   },
   avatar: {
     public_id: {
@@ -40,6 +40,17 @@ const userSchema = new mongoose.Schema({
   isVerified: {
     type: Boolean,
     default: false
+  },
+  // Google OAuth fields
+  googleId: {
+    type: String,
+    default: null,
+    sparse: true
+  },
+  authProvider: {
+    type: String,
+    enum: ['email', 'google'],
+    default: 'email'
   },
   otp: String,
   otpExpire: Date,

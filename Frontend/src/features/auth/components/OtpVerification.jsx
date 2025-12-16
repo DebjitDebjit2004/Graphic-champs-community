@@ -6,11 +6,12 @@ import authService from '../../../services/auth.service';
 
 const OtpVerification = () => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(location.state?.email || '');
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [countdown, setCountdown] = useState(30);
   const [error, setError] = useState('');
+  const [showEmailInput, setShowEmailInput] = useState(!location.state?.email);
   const inputRefs = useRef([]);
   
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const OtpVerification = () => {
 
   // Auto-verify for development
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development' && location.state?.email) {
+    if (import.meta.env.VITE_ENV === 'development' && email) {
       const testOtp = '123456';
       setOtp(testOtp.split(''));
       // Auto-submit after a small delay
@@ -27,16 +28,15 @@ const OtpVerification = () => {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [location.state?.email]);
+  }, [email]);
 
+  // If no email in state, show email input
   useEffect(() => {
     if (location.state?.email) {
       setEmail(location.state.email);
-    } else {
-      toast.error('No email provided. Please register again.');
-      navigate('/register');
+      setShowEmailInput(false);
     }
-  }, [location, navigate]);
+  }, [location.state?.email]);
 
   // Countdown timer for resend OTP
   useEffect(() => {
@@ -135,6 +135,34 @@ const OtpVerification = () => {
     }
   };
 
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      setError('');
+      await authService.requestOtp(email);
+      setShowEmailInput(false);
+      setCountdown(30);
+      toast.success(`OTP sent to ${email}`);
+      // Focus first OTP input
+      if (inputRefs.current[0]) {
+        inputRefs.current[0].focus();
+      }
+    } catch (error) {
+      console.error('Error requesting OTP:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to send OTP. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleResendOtp = async () => {
     if (isResending || countdown > 0) return;
     
@@ -161,13 +189,74 @@ const OtpVerification = () => {
     }
   };
 
-  // Loading state
-  if (!email) {
+  // Email input form
+  if (showEmailInput) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading verification...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+          <div className="text-center">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4">
+              <svg className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-extrabold text-gray-900">
+              Verify Your Email
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Enter your email address to receive a verification code
+            </p>
+            {error && (
+              <p className="mt-2 text-sm text-red-600">{error}</p>
+            )}
+          </div>
+          
+          <form className="mt-8 space-y-6" onSubmit={handleEmailSubmit}>
+            <div className="rounded-md shadow-sm -space-y-px">
+              <div>
+                <label htmlFor="email-address" className="sr-only">Email address</label>
+                <input
+                  id="email-address"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending...
+                  </>
+                ) : 'Send Verification Code'}
+              </button>
+            </div>
+          </form>
+          
+          <div className="text-center mt-4">
+            <button
+              onClick={() => navigate('/login')}
+              className="text-sm text-blue-600 hover:text-blue-500 font-medium"
+            >
+              Back to Login
+            </button>
+          </div>
         </div>
       </div>
     );

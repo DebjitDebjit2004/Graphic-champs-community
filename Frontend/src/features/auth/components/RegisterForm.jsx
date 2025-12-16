@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useGoogleLogin } from '@react-oauth/google';
 import { 
   FaUser, 
   FaEnvelope, 
@@ -17,7 +18,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '../../../contexts/AuthContext';
 
 const RegisterForm = ({ isMobile = false }) => {
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -28,6 +29,7 @@ const RegisterForm = ({ isMobile = false }) => {
     confirmPassword: ''
   });
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -177,16 +179,36 @@ const RegisterForm = ({ isMobile = false }) => {
       
     } catch (error) {
       console.error('Registration error:', error);
-      toast.error(error.message || 'Registration failed. Please try again.');
+      // Use error directly as it's already a string from auth service
+      toast.error(error.toString() || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
   
-  const handleSocialRegister = (provider) => {
-    toast.info(`Sign up with ${provider} coming soon!`);
-    // Implement social registration logic here
-  };
+  const handleGoogleRegister = useGoogleLogin({
+    onSuccess: async (codeResponse) => {
+      setIsGoogleLoading(true);
+      try {
+        const result = await googleLogin(codeResponse.access_token);
+        if (result.success) {
+          toast.success(result.message || 'Registration successful!');
+          navigate('/');
+        } else {
+          throw new Error(result.message || 'Google registration failed');
+        }
+      } catch (error) {
+        toast.error(error.message || 'Google registration failed. Please try again.');
+      } finally {
+        setIsGoogleLoading(false);
+      }
+    },
+    onError: () => {
+      toast.error('Google registration failed. Please try again.');
+      setIsGoogleLoading(false);
+    },
+    flow: 'implicit'
+  });
 
   // Calculate password strength
   const calculatePasswordStrength = (password) => {
@@ -561,16 +583,26 @@ const RegisterForm = ({ isMobile = false }) => {
           <div className="grid grid-cols-2 gap-3 mb-6">
             <button 
               type="button"
-              onClick={() => handleSocialRegister('Google')}
-              className="flex items-center justify-center p-3 bg-gray-50 text-gray-600 rounded-xl border border-gray-200 hover:bg-gray-100 transform hover:scale-105 transition-all duration-300"
+              onClick={() => handleGoogleRegister()}
+              disabled={isGoogleLoading}
+              className={`flex items-center justify-center p-3 bg-red-50 text-red-600 rounded-xl border border-red-200 hover:bg-red-100 transform hover:scale-105 transition-all duration-300 ${
+                isGoogleLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              <FaGoogle className="mr-2" />
-              Google
+              {isGoogleLoading ? (
+                <div className="w-5 h-5 border-t-2 border-red-600 rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <FaGoogle className="mr-2" />
+                  Google
+                </>
+              )}
             </button>
             <button 
               type="button"
-              onClick={() => handleSocialRegister('GitHub')}
-              className="flex items-center justify-center p-3 bg-gray-50 text-gray-600 rounded-xl border border-gray-200 hover:bg-gray-100 transform hover:scale-105 transition-all duration-300"
+              disabled
+              className="flex items-center justify-center p-3 bg-gray-50 text-gray-600 rounded-xl border border-gray-200 opacity-50 cursor-not-allowed"
+              title="GitHub signup coming soon"
             >
               <FaGithub className="mr-2" />
               GitHub

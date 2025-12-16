@@ -9,7 +9,12 @@ export const authService = {
       }
       return response.data;
     } catch (error) {
-      throw error.response?.data?.message || 'Registration failed';
+      // Check for duplicate email error (status code 409 or specific message)
+      if (error.response?.status === 409 || 
+          error.response?.data?.message?.toLowerCase().includes('already exists')) {
+        throw 'An account with this email already exists. Please use a different email or login instead.';
+      }
+      throw error.response?.data?.message || 'Registration failed. Please try again.';
     }
   },
 
@@ -22,6 +27,18 @@ export const authService = {
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Login failed';
+    }
+  },
+
+  async googleAuth(token) {
+    try {
+      const response = await api.post('/auth/google', { token });
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+      }
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || 'Google authentication failed';
     }
   },
 

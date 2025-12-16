@@ -7,7 +7,7 @@ import {
   FaArrowLeft,
   FaShieldAlt
 } from 'react-icons/fa';
-import { authService } from '../src/services/auth.service';
+import { authService } from '../services/auth.service';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const OTPVerificationPage = () => {
